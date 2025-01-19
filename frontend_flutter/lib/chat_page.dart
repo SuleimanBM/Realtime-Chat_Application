@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/message_card.dart';
 import 'package:intl/intl.dart';
-
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class Chatpage extends StatefulWidget {
   const Chatpage({super.key});
@@ -13,38 +13,62 @@ class Chatpage extends StatefulWidget {
 }
 
 class _ChatpageState extends State<Chatpage> {
+  final List<Map<String, dynamic>> messages = [];
   final TextEditingController _controller = TextEditingController();
   late String formattedTime;
+  late IO.Socket socket;
 
   @override
   void initState() {
     super.initState();
     DateTime now = DateTime.now();
     formattedTime = DateFormat('HH:mm').format(now);
+
+    // Initialize the socket connection
+    socket = IO.io(
+        'http://10.132.163.127:3000',
+        IO.OptionBuilder()
+            .setTransports(['websocket']) // Specify transport method
+            .disableAutoConnect() // Disable auto-connect for manual control
+            .build());
+
+    // Connect to the server
+    socket.connect();
+    
+
+    // Listen for incoming messages
+    socket.on('receivePrivateMessage', (data) {
+      print("Received message: $data");
+      setState(() {
+        messages
+            .add({'timestamp': data['timestamp'], 'message': data['message'], 'sender': data['sender']});
+      });
+    });
   }
 
-  final List<Map<String, dynamic>> messages = [
-    {
-      "timestamp": "",
-      "message": "Hello, there!",
-      "sender": "me"
-    },
-    {
-      "timestamp": "",
-      "message": "Hello, how can I help you?",
-      "sender": "bot"
-    },
-  ];
+  @override
+  void dispose() {
+    // Disconnect the socket when the widget is disposed
+    socket.disconnect();
+    super.dispose();
+  }
 
   void sendMessage() {
-    if (_controller.text.isNotEmpty) {
-      setState(() {
-        messages.add({
-          "timestamp": formattedTime,
-          "message": _controller.text,
-          "sender": "bot"
-        });
+
+    if (_controller.text.trim() != '') {
+      socket.emit('sendPrivateMessage', {
+        "timestamp": formattedTime,
+        "message": _controller.text.trim(),
+        "sender": "bot"
       });
+      // setState(() {
+      //   messages.add({
+      //     "timestamp": formattedTime,
+      //     "message": _controller.text,
+      //     "sender": "bot"
+      //   });
+      // }
+      // );
 
       _controller.clear();
     }
@@ -62,7 +86,7 @@ class _ChatpageState extends State<Chatpage> {
           itemBuilder: (context, index) {
             var message = messages[index];
             var sender = message["sender"];
-            return MessageCard(sender: sender,message: message);
+            return MessageCard(sender: sender, message: message);
           },
         ),
         Align(
