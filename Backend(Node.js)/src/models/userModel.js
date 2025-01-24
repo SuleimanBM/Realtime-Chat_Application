@@ -16,7 +16,16 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    socketId: {
+        type: String,
+    },
+    // status:{
+    //     type: String,
+    // },
+    // lastSeen: {
+    //     type: Date,
+    // }
 })
 
 const UserModel = db.model('user', userSchema)

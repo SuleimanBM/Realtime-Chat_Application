@@ -26,7 +26,7 @@ class _ChatpageState extends State<Chatpage> {
 
     // Initialize the socket connection
     socket = IO.io(
-        'http://10.132.163.127:3000',
+        'http://10.10.10.61:3000',
         IO.OptionBuilder()
             .setTransports(['websocket']) // Specify transport method
             .disableAutoConnect() // Disable auto-connect for manual control

@@ -1,17 +1,19 @@
+// ignore_for_file: unused_field, unused_import, prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/chat_page.dart';
-import 'package:frontend_flutter/signup_page.dart';
+import 'package:frontend_flutter/login_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
 
   // TextEditingControllers
@@ -32,8 +34,9 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> sendData() async {
     const url =
-        'http://10.10.10.61:3000/auth/login'; // Replace with your API endpoint
+        'http://10.10.10.61:3000/auth/register'; // Replace with your API endpoint
     final Map<String, dynamic> payload = {
+      'email': _emailController.text,
       'username': _userNameController.text,
       "password": _passwordController.text
     };
@@ -45,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
         body: json.encode(payload),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         // Success
         print('Data sent successfully: ${response.body}');
         final jsonData = json.decode(response.body);
@@ -78,18 +81,38 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             //const Icon(Icons.chat, size: 100, color: Colors.blue),
-            Image.asset('assets/QuickChat.png', width: 100, height: 100),
-            const Text(
-              "Sign up",
-              style: TextStyle(
-                  fontSize: 30, color: Color.fromARGB(255, 3, 6, 34)),
-            ),
+            Image.asset('assets/QuickChat.png', width: 200, height: 200),
+            Text("Sign up", style: TextStyle(fontSize: 30,color: const Color.fromARGB(255, 3, 6, 34)),),
             Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Email TextField
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    child: TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.email),
+                        labelText: "Email",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+
                   // Username TextField
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
@@ -113,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                   ),
-      
+
                   // Password TextField
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
@@ -138,7 +161,32 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                   ),
-      
+
+                  // Confirm Password TextField
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    child: TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock),
+                        labelText: "Confirm Password",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+
                   // Submit Button
                   ElevatedButton(
                     onPressed: () {
@@ -146,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                           _formKey.currentState!.validate()) {
                         final email = _emailController.text;
                         final userName = _userNameController.text;
-      
+
                         // Show success dialog
                         sendData();
                         showDialog(
@@ -160,8 +208,7 @@ class _LoginPageState extends State<LoginPage> {
                         // Show a SnackBar for validation errors
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Please fix the errors in the form'),
+                            content: Text('Please fix the errors in the form'),
                           ),
                         );
                       }
@@ -169,10 +216,14 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text('Submit'),
                   ),
                   InkWell(
-                    child: const Text("Don't have an account? Sign up"),
-                    onTap: () {
-                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SignUpPage(),));
-                  })
+                      child: const Text("Already have an account? Login"),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ));
+                      })
                 ],
               ),
             ),

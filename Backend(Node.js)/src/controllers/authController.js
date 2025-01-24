@@ -6,14 +6,15 @@ export const register = async (req, res) => {
         return res.status(400).json({message: "Please fill all the fields"});
     }
     const userName = username.toLowerCase();
-    const checkUser = await services.findUserByUsername(userName);
-    if(checkUser) {
-        res.status(400).json({message: "User already exists"});
-    }
+    //const checkUser = await services.findUserByUsername(userName);
+    // if(checkUser) {
+    //     res.status(400).json({message: "User already exists"});
+    // }
     const user = await services.registerUser(email, userName, password);
     const token = await utils.generateToken(user._id);
     if(user){
-        return res.status(200).json({ message: "User registered successfully", user,token })
+        console.log(user);
+        return res.status(201).json({ message: "User registered successfully", user,token })
     }
     return res.status(500).json({})
 }
@@ -32,6 +33,6 @@ export const login = async (req, res) => {
     if(!token) {
         res.status(500).json({message:"Error generating token"})
     }
-
-    return res.status(200).json({message: "Login successful", token})
+    console.log(token)
+    return res.status(200).json({message: "Login successful", token: token})
 }
