@@ -11,7 +11,9 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(route)
-
+app.use("*",(req, res) => {
+    res.send("Hello world!");
+})
 const server = http.createServer(app);
 
 const io = new IO(server, { cors: { origin: "*",methods: ["GET", "POST"]}});
