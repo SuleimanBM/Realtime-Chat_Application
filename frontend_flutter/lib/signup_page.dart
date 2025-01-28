@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/chat_page.dart';
+import 'package:frontend_flutter/message_page.dart';
 import 'package:frontend_flutter/login_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -56,7 +57,7 @@ class _SignUpPageState extends State<SignUpPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => Chatpage(),
+              builder: (context) => ChatPage(),
             ),
           );
         }

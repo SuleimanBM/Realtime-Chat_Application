@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/chat_page.dart';
+import 'package:frontend_flutter/login_page.dart';
+import 'package:frontend_flutter/message_page.dart';
 import 'package:frontend_flutter/signup_page.dart';
+import 'package:frontend_flutter/provider.dart';
+import 'package:provider/provider.dart';
+
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => MyProvider(), // Replace with your provider instance
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -34,7 +44,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // home: const Chatpage()
-      home: const SignUpPage(),
+      home: LoginPage()
     );
   }
 }

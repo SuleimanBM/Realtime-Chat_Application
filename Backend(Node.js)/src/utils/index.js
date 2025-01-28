@@ -19,3 +19,8 @@ export const generateToken = async (id) => {
     return token;
 }
 
+export const verifyToken = async (token) => {
+    const verify =  jsonwebtoken.verify(token, process.env.JWT_SECRET);
+    return verify;
+}
+

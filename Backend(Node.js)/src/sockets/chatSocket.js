@@ -1,6 +1,6 @@
 const chatSocket = (io, socket) => {
     socket.on("sendPrivateMessage", (data) => {
-        const { timestamp, message, sender } = data;
+        const { sender, receiver, message, timestamp } = data;
 
         // Validate the incoming data
         if (!timestamp || !message || !sender) {

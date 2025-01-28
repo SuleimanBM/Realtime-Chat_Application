@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/chat_page.dart';
 import 'package:frontend_flutter/signup_page.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend_flutter/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -13,7 +15,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
+  String token = "";
   // TextEditingControllers
   final _emailController = TextEditingController();
   final _userNameController = TextEditingController();
@@ -30,47 +32,53 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> sendData() async {
-    const url =
-        'http://10.10.10.61:3000/auth/login'; // Replace with your API endpoint
-    final Map<String, dynamic> payload = {
-      'username': _userNameController.text,
-      "password": _passwordController.text
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(payload),
-      );
-
-      if (response.statusCode == 200) {
-        // Success
-        print('Data sent successfully: ${response.body}');
-        final jsonData = json.decode(response.body);
-        if (jsonData['token'] != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Chatpage(),
-            ),
-          );
-        }
-      } else {
-        print('Failed to send data. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final myProvider = context.watch<MyProvider>();
+    
+    Future<void> sendData() async {
+      const url =
+          'http://192.168.128.5:3000/auth/login'; // Replace with your API endpoint
+      final Map<String, dynamic> payload = {
+        'username': _userNameController.text,
+        "password": _passwordController.text
+      };
+
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(payload),
+        );
+
+        if (response.statusCode == 200) {
+          // Success
+          print('Data sent successfully: ${response.body}');
+          final jsonData = json.decode(response.body);
+          token = jsonData['token'];
+          if (token != null) {
+             myProvider.setToken(token);
+              print("Saved to provider: ${myProvider.token}");
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatPage(),
+              ),
+            );
+          }
+        } else {
+          print('Failed to send data. Status code: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error: $e');
+      }
+    }
+
+
     return Scaffold(
       appBar: AppBar(
-        // title: const Text("Login"),
-      ),
+          // title: const Text("Login"),
+          ),
       body: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -81,8 +89,8 @@ class _LoginPageState extends State<LoginPage> {
             Image.asset('assets/QuickChat.png', width: 100, height: 100),
             const Text(
               "Sign up",
-              style: TextStyle(
-                  fontSize: 30, color: Color.fromARGB(255, 3, 6, 34)),
+              style:
+                  TextStyle(fontSize: 30, color: Color.fromARGB(255, 3, 6, 34)),
             ),
             Form(
               key: _formKey,
@@ -113,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                   ),
-      
+
                   // Password TextField
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
@@ -138,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                   ),
-      
+
                   // Submit Button
                   ElevatedButton(
                     onPressed: () {
@@ -146,22 +154,22 @@ class _LoginPageState extends State<LoginPage> {
                           _formKey.currentState!.validate()) {
                         final email = _emailController.text;
                         final userName = _userNameController.text;
-      
+
                         // Show success dialog
                         sendData();
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Form Submitted'),
-                            content: Text('Name: $userName\nEmail: $email'),
-                          ),
-                        );
+                       
+                        // showDialog(
+                        //   context: context,
+                        //   builder: (context) => AlertDialog(
+                        //     title: const Text('Form Submitted'),
+                        //     content: Text('Name: $userName\nEmail: $email'),
+                        //   ),
+                        // );
                       } else {
                         // Show a SnackBar for validation errors
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Please fix the errors in the form'),
+                            content: Text('Please fix the errors in the form'),
                           ),
                         );
                       }
@@ -169,10 +177,14 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text('Submit'),
                   ),
                   InkWell(
-                    child: const Text("Don't have an account? Sign up"),
-                    onTap: () {
-                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SignUpPage(),));
-                  })
+                      child: const Text("Don't have an account? Sign up"),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignUpPage(),
+                            ));
+                      })
                 ],
               ),
             ),

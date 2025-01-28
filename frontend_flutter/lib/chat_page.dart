@@ -1,76 +1,47 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
-import 'package:frontend_flutter/message_card.dart';
-import 'package:intl/intl.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:frontend_flutter/chat_page.dart';
+import 'package:frontend_flutter/message_page.dart';
+import 'package:frontend_flutter/signup_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class Chatpage extends StatefulWidget {
-  const Chatpage({super.key});
-
+class ChatPage extends StatefulWidget {
+  ChatPage({
+    super.key,
+  });
   @override
-  State<Chatpage> createState() => _ChatpageState();
+  State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatpageState extends State<Chatpage> {
-  final List<Map<String, dynamic>> messages = [];
-  final TextEditingController _controller = TextEditingController();
-  late String formattedTime;
-  late IO.Socket socket;
+class _ChatPageState extends State<ChatPage> {
+  final TextEditingController _searchController = TextEditingController();
+  late List foundUsers = [];
+  Future<void> sendData() async {
+    const url =
+        'http://192.168.128.5:3000/chat/search-username'; // Replace with your API endpoint
+    final Map<String, dynamic> payload = {
+      'username': _searchController.text,
+    };
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(payload),
+      );
 
-  @override
-  void initState() {
-    super.initState();
-    DateTime now = DateTime.now();
-    formattedTime = DateFormat('HH:mm').format(now);
+      if (response.statusCode == 200) {
+        // Success
+        print('Data sent successfully: ${response.body}');
 
-    // Initialize the socket connection
-    socket = IO.io(
-        'http://10.10.10.61:3000',
-        IO.OptionBuilder()
-            .setTransports(['websocket']) // Specify transport method
-            .disableAutoConnect() // Disable auto-connect for manual control
-            .build());
-
-    // Connect to the server
-    socket.connect();
-    
-
-    // Listen for incoming messages
-    socket.on('receivePrivateMessage', (data) {
-      print("Received message: $data");
-      setState(() {
-        messages
-            .add({'timestamp': data['timestamp'], 'message': data['message'], 'sender': data['sender']});
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    // Disconnect the socket when the widget is disposed
-    socket.disconnect();
-    super.dispose();
-  }
-
-  void sendMessage() {
-
-    if (_controller.text.trim() != '') {
-      socket.emit('sendPrivateMessage', {
-        "timestamp": formattedTime,
-        "message": _controller.text.trim(),
-        "sender": "bot"
-      });
-      // setState(() {
-      //   messages.add({
-      //     "timestamp": formattedTime,
-      //     "message": _controller.text,
-      //     "sender": "bot"
-      //   });
-      // }
-      // );
-
-      _controller.clear();
+        final jsonData = json.decode(response.body);
+        setState(() {
+          foundUsers = jsonData["user"];
+        });
+      } else {
+        print('Failed to send data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 
@@ -78,45 +49,88 @@ class _ChatpageState extends State<Chatpage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chat"),
+        title: Text('QuickChat'),
       ),
-      body: Stack(children: [
-        ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            var message = messages[index];
-            var sender = message["sender"];
-            return MessageCard(sender: sender, message: message);
-          },
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            padding: EdgeInsets.only(left: 10, right: 2),
-            margin: EdgeInsets.only(bottom: 5, left: 5, right: 5),
-            decoration: BoxDecoration(
-              border: Border.all(width: 2.0),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    maxLines: null,
-                    decoration: InputDecoration(border: InputBorder.none),
+      body: Column(children: [
+        Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                        width: 5, color: Color.fromARGB(255, 3, 6, 34))),
+                labelText: 'Enter username to find friends',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.search,
                   ),
+                  iconSize: 40,
+                  color: Color.fromARGB(255, 3, 6, 34),
+                  onPressed: sendData,
                 ),
-                FloatingActionButton(
-                  mini: true,
-                  onPressed: sendMessage,
-                  child: Container(child: Icon(Icons.send)),
-                )
-              ],
-            ),
+              ),
+            )),
+        Expanded(
+          child: ListView.builder(
+            itemCount: foundUsers.length,
+            itemBuilder: (context, index) {
+              return userCard(foundUsers[index]);
+            },
           ),
         ),
       ]),
+    );
+  }
+}
+
+class userCard extends StatelessWidget {
+  userCard(
+    this.user, {
+    super.key,
+  });
+
+  final Map user;
+  late final String username = user["username"];
+  late final String Id = user["_id"];
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        //print(Id);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MessagePage(
+                    otherUserId: Id,
+                  )),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+        child: Row(
+          children: [
+            Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromARGB(255, 3, 6, 34),
+                )),
+            Padding(
+              padding: const EdgeInsets.all(3.0),
+              child: Text(
+                '$username',
+                style: TextStyle(
+                  fontSize: 30,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
