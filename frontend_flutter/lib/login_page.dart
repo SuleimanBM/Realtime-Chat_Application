@@ -38,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
     
     Future<void> sendData() async {
       const url =
-          'http://192.168.128.5:3000/auth/login'; // Replace with your API endpoint
+          'http://10.10.11.240:3000/auth/login'; // Replace with your API endpoint
       final Map<String, dynamic> payload = {
         'username': _userNameController.text,
         "password": _passwordController.text

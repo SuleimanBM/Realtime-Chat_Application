@@ -1,22 +1,57 @@
-const chatSocket = (io, socket) => {
-    socket.on("sendPrivateMessage", (data) => {
-        const { sender, receiver, message, timestamp } = data;
+import { verifyToken } from "../utils/index.js";
+import Chat from "../models/chatsModel.js"
+import { findUserBy } from "../services/userServices.js";
 
-        // Validate the incoming data
-        if (!timestamp || !message || !sender) {
-            console.error("Incomplete data received for sendPrivateMessage");
-            return;
+const chatSocket = async (io, socket) => {
+    const token = socket.handshake.query.token;
+    const user = await verifyToken(token)
+    
+    socket.on("message:send", async ({ receiverId, message }) => {
+        const senderId = user.id;
+        const chatId = [user.id, receiverId].sort().join("_"); // Ensure consistent chatId
+        try {
+            // Save message to the database
+            const newMessage = await Chat.create({
+                chatId: chatId,
+                sender: senderId,
+                receiver: receiverId,
+                content: message,
+                createdAt: new Date(),
+            });
+
+            // Find the receiver in the database
+            const receiver = await User.findById(receiverId);
+            if (!receiver) {
+                console.log("Receiver not found");
+                return;
+            }
+
+            const receiverSocket = receiver.socketId;
+
+            if (receiverSocket) {
+                // Emit the message to the receiver's socket
+                io.to(receiverSocket).emit("message:receive", newMessage);
+            } else {
+                // Optional: Handle offline receivers (e.g., store for notifications)
+                console.log("Receiver is offline");
+            }
+
+            // Update chat metadata (e.g., last message)
+            // await Chat.findOneAndUpdate(
+            //     { _id: chatId },
+            //     {
+            //         lastMessage: message,
+            //         lastMessageAt: new Date(),
+            //     },
+            //     { upsert: true } // Create the chat document if it doesn't exist
+            // );
+        } catch (error) {
+            console.error("Error sending message:", error);
+            // Optional: Emit error back to the sender
+            socket.emit("message:error", { error: "Failed to send message" });
         }
-
-        // Send the message back to the sender
-        socket.emit("receivePrivateMessage", {
-            timestamp,
-            message,
-            sender,
-        });
-
-        console.log(`Message sent back to sender (${sender}): ${message}`);
     });
+
     // Handle one-on-one chat: sending a message
     // socket.on('sendPrivateMessage', (data) => {
     //     // const { recipientId, message, senderId } = data;

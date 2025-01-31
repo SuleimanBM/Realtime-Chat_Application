@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import  { hashPassword, verifyPassword}from "../utils/index.js";
 import createHttpError from "http-errors";
@@ -43,9 +44,25 @@ export const searchByUsername = async (username) => {
 }
 
 export const findByIdAndUpdate = async (id,socketId) => {
-    const user = await User.findByIdAndUpdate(id, {socketId: socketId});
-    if (!user){
-        throw new createHttpError.NotFound()
+    console.log("Id ",id)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new createHttpError.BadRequest("Invalid ID format");
     }
+
+    const user = await User.findByIdAndUpdate(
+        id,
+        { socketId: socketId },
+        { new: true }
+    );
+
+    if (!user) {
+        throw new createHttpError.NotFound("User not found");
+    }
+
+    return user;
+}
+
+export const findUserBy = async (field)=>{
+    const user = await User.findOne({ field });
     return user;
 }

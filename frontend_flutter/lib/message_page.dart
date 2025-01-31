@@ -37,7 +37,7 @@ class _MessagePageState extends State<MessagePage> {
 
       // Initialize the socket with the token
       socket = IO.io(
-          'http://192.168.128.5:3000',
+          'http://10.10.11.240:3000',
           IO.OptionBuilder()
               .setTransports(['websocket']) // Specify transport method
               .setQuery({"token": token}) // Pass the token here
@@ -50,12 +50,12 @@ class _MessagePageState extends State<MessagePage> {
       socket.connect();
 
       // Listen for incoming messages
-      socket.on('receivePrivateMessage', (data) {
+      socket.on('message:receive', (data) {
         print("Received message: $data");
         setState(() {
           messages.add({
             'timestamp': data['timestamp'],
-            'message': data['message'],
+            'message': data['newMessage'],
             'sender': data['sender']
           });
         });
@@ -72,11 +72,9 @@ class _MessagePageState extends State<MessagePage> {
 
   void sendMessage() {
     if (_controller.text.trim() != '') {
-      socket.emit('sendPrivateMessage', {
-        "sender": "bot",
+      socket.emit('message:send', {
         "receiver": widget.otherUserId,
         "message": _controller.text.trim(),
-        "timestamp": formattedTime,
       });
       _controller.clear();
     }

@@ -35,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> sendData() async {
     const url =
-        'http://10.10.10.61:3000/auth/register'; // Replace with your API endpoint
+        'http://10.10.11.240:3000/auth/register'; // Replace with your API endpoint
     final Map<String, dynamic> payload = {
       'email': _emailController.text,
       'username': _userNameController.text,
@@ -82,7 +82,7 @@ class _SignUpPageState extends State<SignUpPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             //const Icon(Icons.chat, size: 100, color: Colors.blue),
-            Image.asset('assets/QuickChat.png', width: 200, height: 200),
+            Expanded(child: Image.asset('assets/QuickChat.png', width: 200, height: 200)),
             Text("Sign up", style: TextStyle(fontSize: 30,color: const Color.fromARGB(255, 3, 6, 34)),),
             Form(
               key: _formKey,
@@ -113,7 +113,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                   ),
-
+                      
                   // Username TextField
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
@@ -137,7 +137,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                   ),
-
+                      
                   // Password TextField
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
@@ -162,7 +162,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                   ),
-
+                      
                   // Confirm Password TextField
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 10),
@@ -187,7 +187,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                   ),
-
+                      
                   // Submit Button
                   ElevatedButton(
                     onPressed: () {
@@ -195,7 +195,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           _formKey.currentState!.validate()) {
                         final email = _emailController.text;
                         final userName = _userNameController.text;
-
+                      
                         // Show success dialog
                         sendData();
                         showDialog(
